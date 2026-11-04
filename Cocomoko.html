@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gesture Canvas</title>
+<link rel="stylesheet" href="assets/css/cocomoko.css">
+</head>
+<body>
+<header>
+  <h1>âœ‹ Gesture Canvas</h1>
+  <button class="primary" id="bUpload">Upload image</button>
+  <input type="file" id="file" accept="image/*" multiple hidden>
+  <span class="sep"></span>
+  <button id="bZoomOut" disabled title="Zoom out selected">Zoom âˆ’</button>
+  <button id="bZoomIn" disabled title="Zoom in selected">Zoom +</button>
+  <button id="bFull" disabled>Full screen</button>
+  <button id="bDel" disabled>Delete</button>
+  <button id="bEdit" disabled>âœŽ Edit</button>
+  <button id="bSheet">â–¦ Edit sheet</button>
+  <button id="bSave">ðŸ’¾ Save sheet</button>
+  <button id="bUndo" disabled>â†¶ Undo</button>
+  <button id="bRedo" disabled>â†· Redo</button>
+  <span class="sep"></span>
+  <button id="bCam">Camera: off</button>
+  <button id="bGuide">Gesture guide</button>
+  <button id="bHelp">Help</button>
+</header>
+
+<div id="projbar"><b>Projects:</b><span id="chips"></span><button id="bNewProj">ðŸ“ New project</button><span id="newBox" style="display:none"><input id="projName" maxlength="30" placeholder="Project name"> <button class="primary" id="bProjOk">Create</button> <button id="bProjNo">Ã—</button></span><label style="margin-left:auto">Move selected to <select id="projSel"></select></label></div>
+<div id="ws">
+  <div id="empty"><div><div style="font-size:40px">ðŸ–¼ï¸</div>Blank canvas â€” upload images to begin.<br>Click an image to select it, then drag, zoom, or use the buttons.</div></div>
+  <div id="trash" title="Drop here to delete">ðŸ—‘ï¸</div>
+</div>
+
+<div id="cam">
+  <div id="camHead"><span id="dot"></span><span id="camStatus">Camera off</span><button id="bHide" title="Hide preview">Hide</button></div>
+  <div id="view"><video id="video" playsinline muted></video><canvas id="ov" width="640" height="480"></canvas></div>
+  <div id="gest">Gesture: â€”</div>
+  <div id="err"></div>
+</div>
+<div id="pill"><span class="pd" id="pdot" style="width:10px;height:10px;border-radius:50%;background:var(--danger)"></span><span id="pillTxt">Camera off</span> Â· show</div>
+<div class="hand" id="h0"></div><div class="hand" id="h1"></div>
+
+<div id="full">
+  <div class="bar"><button class="primary" id="bBack">â† Back</button><button id="bFsOut">Shrink âˆ’</button><button id="bFsIn">Enlarge +</button></div>
+  <img id="fullImg" alt="Full screen image">
+</div>
+
+<div id="help"><div class="card">
+  <h2>How Gesture Canvas works</h2>
+  <table>
+    <tr><td><b>Pinch</b> (thumb + index)</td><td>Select and drag the image under your fingers</td></tr>
+    <tr><td><b>Two-hand pinch</b></td><td>Pinch with both hands on a selected image, then move hands apart / together to zoom</td></tr>
+    <tr><td><b>Drag onto ðŸ—‘ï¸</b></td><td>Release a pinched image over the trash to delete it</td></tr>
+    <tr><td><b>Open palm</b></td><td>Hold ~0.7 s to expand the selected image to full screen</td></tr>
+    <tr><td><b>Index swipe left</b></td><td>In full screen, point with index finger and swipe left to go back</td></tr>
+  </table>
+  <p>Every action also has a button (or mouse: drag, wheel to zoom). Gestures are optional.</p>
+  <h3>Camera permission blocked?</h3>
+  <ul>
+    <li><b>Chrome / Edge:</b> click the camera or lock icon in the address bar â†’ set Camera to Allow â†’ reload.</li>
+    <li><b>Firefox:</b> click the permissions icon in the address bar â†’ remove the blocked Camera entry â†’ reload and Allow.</li>
+    <li><b>Safari:</b> Safari â†’ Settings for This Website â†’ Camera â†’ Allow.</li>
+    <li>Also check your OS privacy settings and that no other app is using the camera.</li>
+    <li>If the page is embedded in another page, open it in its own tab.</li>
+  </ul>
+  <h3>Run locally</h3>
+  <p>Save this page as <code>index.html</code>, then in that folder:</p>
+  <pre>python3 -m http.server 8000</pre>
+  <p>Open <code>http://localhost:8000</code>. Camera access needs HTTPS or localhost. Hand tracking loads MediaPipe Hands from the jsDelivr CDN, so you need an internet connection.</p>
+  <button class="primary" id="bHelpClose">Close</button>
+</div></div>
+<div id="ask"><div class="card">
+  <div style="font-size:40px">ðŸ“·</div>
+  <h2>Allow camera access?</h2>
+  <p>Gesture Canvas uses your webcam to track your hand so you can pinch, zoom and swipe. Video stays in your browser and is never uploaded. Your browser will ask for confirmation next â€” choose <b>Allow</b>.</p>
+  <div class="row"><button class="primary" id="askYes">Allow camera</button><button id="askNo">Not now</button></div>
+</div></div>
+<div id="ed"><div class="card">
+ <div class="tb"><button data-t="pencil">âœï¸ Pencil</button><input type="color" id="edColor" value="#e63946" title="Pencil color"><label>Size <input type="range" id="edSize" min="1" max="40" value="6"></label><button data-t="eraser">ðŸ§½ Eraser</button><button data-t="crop">âœ‚ï¸ Crop</button><button id="edApplyCrop">Apply crop</button></div>
+ <canvas id="edc"></canvas>
+ <div class="tb"><span id="edHint" style="flex:1;color:var(--muted);font-size:13px"></span><button id="edSave">ðŸ’¾ Save copy</button><button id="edCancel">Cancel</button><button class="primary" id="edDone">Done</button></div>
+</div></div>
+<div id="guide"><div class="card"><h2 style="margin:0 0 8px">Gesture guide</h2>
+<table>
+<tr><td><b>Pinch</b> thumb + index</td><td>Select and drag the image under your fingers. Drop on ðŸ—‘ï¸ to delete.</td></tr>
+<tr><td><b>Two-hand pinch</b></td><td>While holding an image with one hand, pinch with the other and move the hands apart (enlarge) or together (shrink).</td></tr>
+<tr><td><b>Open palm</b> (hold 0.7 s)</td><td>Selected image â†’ full screen</td></tr>
+<tr><td><b>Full screen: spread</b></td><td>Thumb + index out, other fingers curled: widen = enlarge, close = shrink (or pinch with both hands). Stays on screen.</td></tr>
+<tr><td><b>Full screen: swipe left</b></td><td>Point with index finger, swipe left â†’ back</td></tr>
+<tr><td><b>Swipe right / left</b></td><td>Point with index finger on the canvas: right = Undo, left = Redo. Ignored while dragging, zooming or editing.</td></tr>
+<tr><td><b>Two fingers</b> (index + middle, hold 0.7 s)</td><td>Open the editor on the selected image</td></tr>
+<tr><td><b>Three fingers</b> (index + middle + ring)</td><td>Open the editor on the whole work sheet (the entire canvas, blank space and all images) â€” draw, erase, crop, then Done or Save copy</td></tr>
+<tr><td><b>Flat horizontal palm</b></td><td>Crop tool. In the editor the crop box follows your hand (closer = bigger). Close your palm into a fist to cut.</td></tr>
+</table>
+<h3>Tips</h3>
+<ul style="margin:0;padding-left:18px;font-size:13.5px"><li>Place the camera at eye level, about 40â€“70 cm away, so your whole hand fits in the preview.</li><li>Light your hand from the front; avoid a bright window behind you.</li><li>Keep the hand inside the preview, palm facing the camera, on a plain background.</li><li>Move smoothly; pause a moment between gestures.</li><li>A green skeleton in the preview means the hand is detected; the bar under it names the current gesture.</li></ul>
+<p><button class="primary" id="bGuideClose">Close</button></p></div></div>
+<div id="toast"></div>
+
+  <script src="assets/js/gesture-canvas-clean.js"></script>
+</body>
+</html>
+
